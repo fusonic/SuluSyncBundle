@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="fusonic_sulu_sync.importCommand" class="Fusonic\SuluSyncBundle\Command\ImportCommand">
+            <tag name="console.command"/>
+            <argument>%secret%</argument>
+            <argument>%database_host%</argument>
+            <argument>%database_name%</argument>
+            <argument>%database_user%</argument>
+            <argument>%database_password%</argument>
+        </service>
+
+        <service id="fusonic_sulu_sync.importCommand" class="Fusonic\SuluSyncBundle\Command\ImportCommand">
+            <tag name="console.command"/>
+            <argument>%secret%</argument>
+            <argument>%database_host%</argument>
+            <argument>%database_name%</argument>
+            <argument>%database_user%</argument>
+            <argument>%database_password%</argument>
+            <argument>%kernel.root_dir%</argument>
+        </service>
+    </services>
+</container>
