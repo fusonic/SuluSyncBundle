@@ -1,0 +1,14 @@
+{
+    "name": "fusonic/sulu-sync",
+    "description": "Sync contents between two Sulu systems.",
+    "authors": [
+        {
+            "name": "Andreas Fröwis",
+            "email": "andreas.froewis@fusonic.net"
+        }
+    ],
+    "require": {
+        "symfony/console": "^3.2",
+        "symfony/process": "^3.2"
+    }
+}
