@@ -7,6 +7,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -72,23 +73,29 @@ class ImportCommand extends Command
     {
         $this->input = $input;
         $this->output = $output;
+        $skipAssets = $this->input->getOption("skip-assets");
+
+        $this->progressBar = new ProgressBar($this->output, $skipAssets ? 4 : 6);
+        $this->progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% <info>%message%</info>');
 
         $this->downloadFiles($input->getArgument("host"));
         $this->importPHPCR();
         $this->importDatabase();
 
-        if (!$this->input->getOption("skip-assets")) {
+        if (!$skipAssets) {
             $this->importUploads();
         }
 
+        $this->progressBar->finish();
+
         $this->output->writeln(
-            "<info>Successfully imported contents. You're good to go!</info>"
+            PHP_EOL . "<info>Successfully imported contents. You're good to go!</info>"
         );
     }
 
     private function downloadFile($source, $target)
     {
-        $context = stream_context_create([], ["notification" => [$this, "progress"]]);
+        $context = stream_context_create();
         $resource = fopen($source, "r", null, $context);
         file_put_contents($target, $resource);
 
@@ -97,7 +104,7 @@ class ImportCommand extends Command
 
     private function downloadFiles($host)
     {
-        $this->output->writeln("Downloading files...");
+        $this->progressBar->setMessage("Downloading files...");
         $filename = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $this->secret;
 
         $files = [
@@ -112,6 +119,7 @@ class ImportCommand extends Command
         $result = true;
         foreach($files as $source => $target) {
             $result &= (bool)$this->downloadFile($source, $target);
+            $this->progressBar->advance();
 
             if (!$result) {
                 break;
@@ -128,27 +136,27 @@ class ImportCommand extends Command
 
     private function importPHPCR()
     {
-        $this->output->write(PHP_EOL);
-        $this->output->writeln("Importing PHPCR...");
+        $this->progressBar->setMessage("Importing PHPCR repository...");
         $this->executeCommand(
             "doctrine:phpcr:workspace:purge",
             [
-                "--force" => true
+                "--force" => true,
             ],
-            $this->output
+            new NullOutput()
         );
         $this->executeCommand(
             "doctrine:phpcr:workspace:import",
             [
                 "filename" => $this->getTempPath(".phpcr")
             ],
-            $this->output
+            new NullOutput()
         );
+        $this->progressBar->advance();
     }
 
     private function importDatabase()
     {
-        $this->output->writeln("Importing database...");
+        $this->progressBar->setMessage("Importing database...");
         $filename = $this->getTempPath(".sql");
         $command =
             "mysql -h {$this->databaseHost} -u " . escapeshellarg($this->databaseUser) .
@@ -157,7 +165,7 @@ class ImportCommand extends Command
 
         $process = new Process($command);
         $process->run();
-
+        $this->progressBar->advance();
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
@@ -165,9 +173,11 @@ class ImportCommand extends Command
 
     private function importUploads()
     {
+        $this->progressBar->setMessage("Importing uploads...");
         $filename = $this->getTempPath(".tar.gz");
         $process = new Process("tar -xvf {$filename} var/uploads  --no-overwrite-dir");
         $process->run();
+        $this->progressBar->advance();
 
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
@@ -183,33 +193,6 @@ class ImportCommand extends Command
             ),
             $output
         );
-    }
-
-    private function progress($notificationCode, $severity, $message, $messageCode, $bytesTransferred, $bytesMax)
-    {
-        if (STREAM_NOTIFY_REDIRECTED === $notificationCode && $this->progressBar) {
-            $this->progressBar->clear();
-            $this->progressBar = null;
-            return;
-        }
-
-        if (STREAM_NOTIFY_FILE_SIZE_IS === $notificationCode) {
-            if ($this->progressBar) {
-                $this->progressBar->clear();
-            }
-            $this->progressBar = new ProgressBar($this->output, $bytesMax);
-        }
-
-        if (STREAM_NOTIFY_PROGRESS === $notificationCode) {
-            if (is_null($this->progressBar)) {
-                $this->progressBar = new ProgressBar($this->output);
-            }
-            $this->progressBar->setProgress($bytesTransferred);
-        }
-
-        if (STREAM_NOTIFY_COMPLETED === $notificationCode) {
-            $this->finish($bytesTransferred);
-        }
     }
 
     /**

@@ -14,7 +14,7 @@
             <argument>%database_password%</argument>
         </service>
 
-        <service id="fusonic_sulu_sync.importCommand" class="Fusonic\SuluSyncBundle\Command\ImportCommand">
+        <service id="fusonic_sulu_sync.exportCommand" class="Fusonic\SuluSyncBundle\Command\ExportCommand">
             <tag name="console.command"/>
             <argument>%secret%</argument>
             <argument>%database_host%</argument>

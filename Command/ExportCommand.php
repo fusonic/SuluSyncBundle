@@ -3,8 +3,10 @@
 namespace Fusonic\SuluSyncBundle\Command;
 
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -21,6 +23,11 @@ class ExportCommand extends Command
      */
     private $output;
 
+    /**
+     * @var ProgressBar
+     */
+    private $progressBar;
+
     private $secret;
     private $databaseHost;
     private $databaseUser;
@@ -32,8 +39,8 @@ class ExportCommand extends Command
     public function __construct(
         $secret,
         $databaseHost,
-        $databaseUser,
         $databaseName,
+        $databaseUser,
         $databasePassword,
         $kernelRootDir
     ) {
@@ -60,13 +67,22 @@ class ExportCommand extends Command
         $this->input = $input;
         $this->output = $output;
 
+        $this->progressBar = new ProgressBar($this->output, 3);
+        $this->progressBar->setFormat("%current%/%max% [%bar%] %percent:3s%% <info>%message%</info>");
+
         $this->exportPHPCR();
         $this->exportDatabase();
         $this->exportUploads();
+        $this->progressBar->finish();
+
+        $this->output->writeln(
+            PHP_EOL . "<info>Successfully exported contents.</info>"
+        );
     }
 
     private function exportPHPCR()
     {
+        $this->progressBar->setMessage("Exporting PHPCR repository...");
         $this->executeCommand(
             "doctrine:phpcr:workspace:export",
             [
@@ -74,10 +90,12 @@ class ExportCommand extends Command
                 "filename" => $this->exportDirectory . DIRECTORY_SEPARATOR . "{$this->secret}.phpcr"
             ]
         );
+        $this->progressBar->advance();
     }
 
     private function exportDatabase()
     {
+        $this->progressBar->setMessage("Exporting database...");
         $command =
             "mysqldump -h {$this->databaseHost} -u " . escapeshellarg($this->databaseUser) .
             ($this->databasePassword ? " -p" . escapeshellarg($this->databasePassword) : "") .
@@ -85,6 +103,7 @@ class ExportCommand extends Command
 
         $process = new Process($command);
         $process->run();
+        $this->progressBar->advance();
 
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
@@ -93,12 +112,14 @@ class ExportCommand extends Command
 
     private function exportUploads()
     {
+        $this->progressBar->setMessage("Exporting uploads...");
         $exportPath = $this->kernelRootDir . DIRECTORY_SEPARATOR . ".."  . DIRECTORY_SEPARATOR . "var" . DIRECTORY_SEPARATOR . "uploads";
         $process = new Process(
             "tar cvf " . $this->exportDirectory . DIRECTORY_SEPARATOR . $this->secret . ".tar.gz {$exportPath}"
         );
         $process->setTimeout(300);
         $process->run();
+        $this->progressBar->advance();
 
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
@@ -112,7 +133,7 @@ class ExportCommand extends Command
             new ArrayInput(
                 ["command" => $cmd] + $params
             ),
-            $this->output
+            new NullOutput()
         );
     }
 }
