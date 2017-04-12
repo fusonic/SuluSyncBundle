@@ -13,7 +13,7 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('fusonic_sulu_sync');
+        $rootNode = $treeBuilder->root("fusonic_sulu_sync");
         return $treeBuilder;
     }
 }
