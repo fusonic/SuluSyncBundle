@@ -34,13 +34,15 @@ class ImportCommand extends Command
     private $databaseUser;
     private $databaseName;
     private $databasePassword;
+    private $kernelRootDir;
 
     public function __construct(
         $secret,
         $databaseHost,
         $databaseName,
         $databaseUser,
-        $databasePassword
+        $databasePassword,
+        $kernelRootDir
     ) {
         parent::__construct();
 
@@ -49,6 +51,7 @@ class ImportCommand extends Command
         $this->databaseUser = $databaseUser;
         $this->databaseName = $databaseName;
         $this->databasePassword = $databasePassword;
+        $this->kernelRootDir = $kernelRootDir;
     }
 
     protected function configure()
@@ -175,7 +178,16 @@ class ImportCommand extends Command
     {
         $this->progressBar->setMessage("Importing uploads...");
         $filename = $this->getTempPath(".tar.gz");
-        $process = new Process("tar -xvf {$filename} var/uploads  --no-overwrite-dir");
+
+        // Directory path with new Symfony directory structure - i.e. var/uploads.
+        $path = $this->kernelRootDir . DIRECTORY_SEPARATOR . ".."  . DIRECTORY_SEPARATOR . "var" . DIRECTORY_SEPARATOR . "uploads";
+        if (file_exists($path)) {
+            $path = "var/uploads";
+        } else {
+            $path = "uploads";
+        }
+
+        $process = new Process("tar -xvf {$filename} {$path}  --no-overwrite-dir");
         $process->run();
         $this->progressBar->advance();
 

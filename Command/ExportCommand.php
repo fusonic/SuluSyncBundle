@@ -113,7 +113,14 @@ class ExportCommand extends Command
     private function exportUploads()
     {
         $this->progressBar->setMessage("Exporting uploads...");
+
+        // Directory path with new Symfony directory structure - i.e. var/uploads.
         $exportPath = $this->kernelRootDir . DIRECTORY_SEPARATOR . ".."  . DIRECTORY_SEPARATOR . "var" . DIRECTORY_SEPARATOR . "uploads";
+        if (!file_exists($exportPath)) {
+            // Old-fashioned directory structure.
+            $exportPath = $this->kernelRootDir . DIRECTORY_SEPARATOR . ".."  . DIRECTORY_SEPARATOR . "uploads";
+        }
+
         $process = new Process(
             "tar cvf " . $this->exportDirectory . DIRECTORY_SEPARATOR . $this->secret . ".tar.gz {$exportPath}"
         );

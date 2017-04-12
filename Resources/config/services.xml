@@ -12,6 +12,7 @@
             <argument>%database_name%</argument>
             <argument>%database_user%</argument>
             <argument>%database_password%</argument>
+            <argument>%kernel.root_dir%</argument>
         </service>
 
         <service id="fusonic_sulu_sync.exportCommand" class="Fusonic\SuluSyncBundle\Command\ExportCommand">
