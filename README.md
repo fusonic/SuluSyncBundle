@@ -1,7 +1,9 @@
 # SuluSyncBundle
 
 ## Installation
-With a healthy Sulu installation, install this bundle (packagist package coming soon) and add it to your `AbstractKernel.php`: 
+`composer require fusonic/sulu-sync`
+
+With a healthy Sulu installation, install this bundle and add it to your `AbstractKernel.php`: 
 
 ```
 ...
