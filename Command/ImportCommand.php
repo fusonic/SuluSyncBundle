@@ -31,6 +31,7 @@ class ImportCommand extends Command
 
     private $secret;
     private $databaseHost;
+    private $databasePort;
     private $databaseUser;
     private $databaseName;
     private $databasePassword;
@@ -39,6 +40,7 @@ class ImportCommand extends Command
     public function __construct(
         $secret,
         $databaseHost,
+        $databasePort,
         $databaseName,
         $databaseUser,
         $databasePassword,
@@ -48,6 +50,7 @@ class ImportCommand extends Command
 
         $this->secret = $secret;
         $this->databaseHost = $databaseHost;
+        $this->databasePort = is_null($databasePort) ? 3306 : $databasePort;
         $this->databaseUser = $databaseUser;
         $this->databaseName = $databaseName;
         $this->databasePassword = $databasePassword;
@@ -162,7 +165,7 @@ class ImportCommand extends Command
         $this->progressBar->setMessage("Importing database...");
         $filename = $this->getTempPath(".sql");
         $command =
-            "mysql -h {$this->databaseHost} -u " . escapeshellarg($this->databaseUser) .
+            "mysql -h {$this->databaseHost} -P {$this->databasePort} -u " . escapeshellarg($this->databaseUser) .
             ($this->databasePassword ? " -p" . escapeshellarg($this->databasePassword) : "") .
             " " . escapeshellarg($this->databaseName) . " < " . "{$filename}";
 

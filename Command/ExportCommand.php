@@ -30,6 +30,7 @@ class ExportCommand extends Command
 
     private $secret;
     private $databaseHost;
+    private $databasePort;
     private $databaseUser;
     private $databaseName;
     private $databasePassword;
@@ -39,6 +40,7 @@ class ExportCommand extends Command
     public function __construct(
         $secret,
         $databaseHost,
+        $databasePort,
         $databaseName,
         $databaseUser,
         $databasePassword,
@@ -48,6 +50,7 @@ class ExportCommand extends Command
 
         $this->secret = $secret;
         $this->databaseHost = $databaseHost;
+        $this->databasePort = is_null($databasePort) ? 3306 : $databasePort;
         $this->databaseUser = $databaseUser;
         $this->databaseName = $databaseName;
         $this->databasePassword = $databasePassword;
@@ -97,7 +100,7 @@ class ExportCommand extends Command
     {
         $this->progressBar->setMessage("Exporting database...");
         $command =
-            "mysqldump -h {$this->databaseHost} -u " . escapeshellarg($this->databaseUser) .
+            "mysqldump -h {$this->databaseHost} -P {$this->databasePort} -u " . escapeshellarg($this->databaseUser) .
             ($this->databasePassword ? " -p" . escapeshellarg($this->databasePassword) : "") .
             " " . escapeshellarg($this->databaseName) . " > " . $this->exportDirectory . DIRECTORY_SEPARATOR . "{$this->secret}.sql";
 

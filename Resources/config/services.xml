@@ -9,6 +9,7 @@
             <tag name="console.command"/>
             <argument>%secret%</argument>
             <argument>%database_host%</argument>
+            <argument>%database_port%</argument>
             <argument>%database_name%</argument>
             <argument>%database_user%</argument>
             <argument>%database_password%</argument>
@@ -19,6 +20,7 @@
             <tag name="console.command"/>
             <argument>%secret%</argument>
             <argument>%database_host%</argument>
+            <argument>%database_port%</argument>
             <argument>%database_name%</argument>
             <argument>%database_user%</argument>
             <argument>%database_password%</argument>
